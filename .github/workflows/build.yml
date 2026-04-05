@@ -2,7 +2,8 @@ name: Build and Sign APK
 
 on:
   push:
-    branches: [master]
+    tags:
+      - 'V*'
   workflow_dispatch:
 
 jobs:
@@ -50,16 +51,15 @@ jobs:
       - name: Get version info for release tag
         id: version
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          DATE=$(date -u '+%Y%m%d')
-          echo "tag=build-${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "name=Build ${DATE} (${SHORT_SHA})" >> $GITHUB_OUTPUT
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "name=$TAG" >> $GITHUB_OUTPUT
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.name }}
-          body: "Auto-built and signed from master"
+          body: "Auto-built and signed from upstream tag ${{ steps.version.outputs.tag }}"
           files: ${{ vars.APK_NAME }}
           make_latest: true
