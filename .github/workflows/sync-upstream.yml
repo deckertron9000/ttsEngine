@@ -7,7 +7,7 @@ on:
 
 jobs:
   sync:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04   # pinned, matches build.yml
 
     steps:
       - name: Checkout fork
@@ -18,7 +18,8 @@ jobs:
 
       - name: Add upstream remote
         run: |
-          git remote add upstream https://github.com/woheller69/ttsEngine.git
+          # UPSTREAM_URL is a repository variable: Settings -> Secrets and variables -> Actions -> Variables
+          git remote add upstream ${{ vars.UPSTREAM_URL }}
           git fetch upstream master   # fetch latest upstream commits
 
       - name: Merge upstream into fork
