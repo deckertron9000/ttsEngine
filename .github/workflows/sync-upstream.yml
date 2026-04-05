@@ -1,0 +1,29 @@
+name: Sync from upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *'    # run daily at 06:00 UTC
+  workflow_dispatch:         # allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0              # full history needed for merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/woheller69/ttsEngine.git
+          git fetch upstream master   # fetch latest upstream commits
+
+      - name: Merge upstream into fork
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git merge upstream/master --ff-only   # fast-forward only, no merge commits
+          git push origin master                # push to your fork, triggers build.yml
