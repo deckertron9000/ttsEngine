@@ -29,6 +29,7 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          APK_NAME: ${{ vars.APK_NAME }}
         run: |
           # decode keystore from base64 secret into a temp file
           echo "$SIGNING_KEYSTORE_B64" | base64 --decode > /tmp/release.jks
@@ -50,7 +51,8 @@ jobs:
           rm /tmp/release.jks
 
           # rename for clarity in the release assets
-          mv "$APK" ttsEngine-signed.apk
+          # APK_NAME is a repository variable: Settings -> Secrets and variables -> Actions -> Variables
+          mv "$APK" "$APK_NAME"
 
       - name: Get version info for release tag
         id: version
@@ -66,5 +68,5 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}    # unique per build, sorts correctly
           name: ${{ steps.version.outputs.name }}
           body: "Auto-built and signed from master"
-          files: ttsEngine-signed.apk
+          files: ${{ vars.APK_NAME }}
           make_latest: true                             # Obtainium will find this as latest
