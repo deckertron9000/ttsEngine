@@ -22,6 +22,55 @@ jobs:
           git fetch upstream master --tags
 
       - name: Merge upstream into fork
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git merge upstream/master --ff-only
+
+          NEW_TAG=$(git tag --sort=-version:refname | head -1)
+          LOCAL_TAG=$(git ls-remote origin --tags | grep -o 'V[0-9]*\.[0-9]*' | sort -V | tail -1)
+
+          if [ "$NEW_TAG" != "$LOCAL_TAG" ]; then
+            echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+            echo "has_new_tag=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_new_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+          git push origin master --tags
+
+      - name: Trigger build workflow
+        if: steps.merge.outputs.has_new_tag == 'true'
+        run: |
+          gh workflow run build.yml \
+            --repo ${{ github.repository }} \
+            --ref ${{ steps.merge.outputs.new_tag }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}name: Sync from upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream ${{ vars.UPSTREAM_URL }}
+          git fetch upstream master --tags
+
+      - name: Merge upstream into fork
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
