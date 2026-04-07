@@ -16,9 +16,17 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get upstream URL from GitHub API
+        id: upstream
+        run: |
+          UPSTREAM_URL=$(gh api repos/${{ github.repository }} --jq '.parent.clone_url')
+          echo "url=$UPSTREAM_URL" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Add upstream remote
         run: |
-          git remote add upstream ${{ vars.UPSTREAM_URL }}
+          git remote add upstream ${{ steps.upstream.outputs.url }}
           git fetch upstream master --tags
 
       - name: Merge upstream into fork
