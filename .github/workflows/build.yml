@@ -4,12 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to use for release name'
-        required: false
+        description: 'Upstream tag to build'
+        required: true
+      upstream_repo:
+        description: 'Upstream repository (owner/repo)'
+        required: true
 
 jobs:
   build:
     uses: deckertron9000-builds/.github/.github/workflows/reusable-build.yml@main
     with:
       tag: ${{ inputs.tag }}
+      upstream_repo: ${{ inputs.upstream_repo }}
     secrets: inherit
